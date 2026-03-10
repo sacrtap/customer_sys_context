@@ -4,6 +4,7 @@
 
 from sanic import Blueprint, json, request
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from io import BytesIO
 from uuid import UUID
 
@@ -104,8 +105,16 @@ async def list_customers(request):
         count_result = await session.execute(count_query)
         total = count_result.scalar()
 
-        # 查询
-        query = query.offset(offset).limit(page_size)
+        # 查询 - 预加载关联对象避免 lazy load 错误
+        query = (
+            query.options(
+                selectinload(Customer.industry),
+                selectinload(Customer.level),
+                selectinload(Customer.owner),
+            )
+            .offset(offset)
+            .limit(page_size)
+        )
         result = await session.execute(query)
         customers = result.scalars().all()
 

@@ -259,8 +259,8 @@ const fetchCustomers = async () => {
     }
 
     const response = await request.get<CustomerListResponse>('/customers', { params })
-    customers.value = response.data.items || []
-    pagination.total = response.data.total || 0
+    customers.value = response.items || []
+    pagination.total = response.total || 0
   } catch (error) {
     console.error('获取客户列表失败:', error)
   } finally {
