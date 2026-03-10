@@ -1,6 +1,5 @@
-"""
-API v1 路由
-"""
+# -*- coding: utf-8 -*-
+"""API v1 路由"""
 
 from sanic import Blueprint
 
