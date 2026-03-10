@@ -62,3 +62,6 @@ test-results/
 tmp/
 temp/
 *.tmp
+
+# Git worktrees
+.worktrees/
