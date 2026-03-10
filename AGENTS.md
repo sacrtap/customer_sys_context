@@ -3157,3 +3157,215 @@ npx playwright show-report
 
 *Last updated: 2026-03-10 (响应式测试 14/14 全部通过)*  
 *Repository: github.com/sacrtap/customer_sys_context*
+
+---
+
+## 后端 API 枚举类型和重复端点修复 (2026-03-10)
+
+### 修复内容
+
+**1. 客户列表状态筛选枚举值问题**
+
+**问题**：客户列表 API 的状态筛选参数直接使用字符串比较，导致与 PostgreSQL 枚举类型不匹配。
+
+**修复文件**: `backend/app/api/v1/routes/customers.py`
+
+**修复代码**:
+```python
+# 状态筛选
+status = request.args.get("status")
+if status:
+    # 转换为枚举值（支持 "ACTIVE" 或 "active" 输入）
+    status_value = status.upper()
+    try:
+        status_enum = CustomerStatus(status_value)
+        query = query.where(Customer.status == status_enum.value)
+    except ValueError:
+        return json(
+            {"error": f"无效的客户状态：{status}"}, status=400
+        )
+
+# 结算状态筛选
+settlement_status = request.args.get("settlement_status")
+if settlement_status:
+    # 转换为枚举值（支持 "UNSETTLED" 或 "unsettled" 输入）
+    settlement_status_value = settlement_status.upper()
+    try:
+        settlement_status_enum = SettlementStatus(settlement_status_value)
+        query = query.where(
+            Customer.settlement_status == settlement_status_enum.value
+        )
+    except ValueError:
+        return json(
+            {"error": f"无效的结算状态：{settlement_status}"}, status=400
+        )
+```
+
+**最佳实践**:
+1. 路由层处理枚举转换，支持大小写输入
+2. 无效输入返回 400 错误，提供明确的错误信息
+3. 查询时使用 `.value` 获取枚举的字符串值
+
+**2. 移除重复的 /me 端点**
+
+**问题**: 
+- `GET /api/v1/users/me` (users.py:237)
+- `GET /api/v1/auth/me` (auth.py:87) - 重复
+
+**解决方案**:
+- 删除 `auth.py` 中的 `/me` 端点
+- 保留 `users.py` 中的 `/me` 端点（包含更完整的权限信息）
+- 避免端点冲突和混淆
+
+**修复验证**:
+- ✅ customers.py 语法验证通过
+- ✅ auth.py 语法验证通过（从 111 行减少到 91 行）
+- ✅ 状态筛选支持枚举转换
+- ✅ 重复端点已移除
+
+---
+
+## 合同到期日期功能实现 (2026-03-10)
+
+### 实现内容
+
+**1. 添加合同到期日期字段**
+
+**模型文件**: `backend/app/models/customer.py`
+
+```python
+class Customer(BaseModel):
+    # ... 其他字段 ...
+    
+    # 合同到期日期
+    contract_expiry_date = Column(Date, nullable=True, index=True)
+```
+
+**2. 更新 Schema**
+
+**文件**: `backend/app/schemas/customer.py`
+
+```python
+class CustomerBase(BaseModel):
+    """客户基础 Schema"""
+    
+    customer_code: str = Field(..., min_length=1, max_length=50)
+    customer_name: str = Field(..., min_length=1, max_length=200)
+    contact_person: str | None = None
+    contact_phone: str | None = None
+    contact_email: EmailStr | None = None
+    address: str | None = None
+    remark: str | None = None
+    contract_expiry_date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    _validate_phone = field_validator("contact_phone")(validate_phone)
+
+
+class CustomerUpdate(BaseModel):
+    """更新客户请求"""
+    
+    # ... 其他字段 ...
+    contract_expiry_date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+```
+
+**3. 更新 Dashboard 即将到期客户逻辑**
+
+**文件**: `backend/app/api/v1/routes/dashboard.py`
+
+```python
+# 即将到期客户数（合同到期日期在最近 30 天内）
+thirty_days_later = date.today() + timedelta(days=30)
+expiring_customers = await session.scalar(
+    select(func.count())
+    .select_from(Customer)
+    .where(
+        Customer.status == CustomerStatus.ACTIVE.value,
+        Customer.contract_expiry_date != None,
+        Customer.contract_expiry_date <= thirty_days_later,
+        Customer.contract_expiry_date >= date.today(),
+    )
+)
+```
+
+**4. 更新客户列表 API 支持合同到期筛选**
+
+**文件**: `backend/app/api/v1/routes/customers.py`
+
+```python
+# 合同到期日期筛选
+expiry_status = request.args.get("expiry_status")
+if expiry_status == "expiring":
+    # 即将到期（最近 30 天内）
+    from datetime import date, timedelta
+    thirty_days_later = date.today() + timedelta(days=30)
+    query = query.where(
+        Customer.contract_expiry_date != None,
+        Customer.contract_expiry_date <= thirty_days_later,
+        Customer.contract_expiry_date >= date.today(),
+    )
+elif expiry_status == "expired":
+    # 已到期
+    from datetime import date
+    query = query.where(
+        Customer.contract_expiry_date != None,
+        Customer.contract_expiry_date < date.today(),
+    )
+```
+
+**5. 创建数据库迁移**
+
+**文件**: `backend/alembic/versions/003_add_contract_expiry.py`
+
+```python
+revision: str = "003_add_contract_expiry"
+down_revision: Union[str, None] = "002_fix_enums"
+
+def upgrade() -> None:
+    # 添加合同到期日期字段
+    op.add_column("customers", sa.Column("contract_expiry_date", sa.Date(), nullable=True))
+    
+    # 创建索引以提高查询性能
+    op.create_index("ix_customers_contract_expiry_date", "customers", ["contract_expiry_date"])
+
+def downgrade() -> None:
+    # 删除索引
+    op.drop_index("ix_customers_contract_expiry_date", "customers")
+    
+    # 删除字段
+    op.drop_column("customers", "contract_expiry_date")
+```
+
+### 最佳实践
+
+1. **日期字段设计**: 使用 `Date` 类型存储到期日期
+2. **索引优化**: 为查询字段创建索引提高性能
+3. **筛选逻辑**: 支持 `expiring`（即将到期）和 `expired`（已到期）两种筛选
+4. **前端格式**: 使用 `YYYY-MM-DD` 格式字符串
+5. **空值处理**: 合同到期日期为可选字段，允许为 `None`
+
+### 验证结果
+
+- ✅ 模型字段添加成功
+- ✅ Schema 验证规则正确
+- ✅ Dashboard API 逻辑更新
+- ✅ 客户列表 API 支持筛选
+- ✅ 迁移文件语法验证通过
+- ✅ 所有文件 Python 3.11 语法检查通过
+
+### 运行迁移
+
+```bash
+cd backend
+source venv/bin/activate
+
+# 应用迁移
+alembic upgrade head
+
+# 验证迁移
+alembic current
+# 应显示：003_add_contract_expiry
+```
+
+---
+
+*Last updated: 2026-03-10 (合同到期日期功能实现)*  
+*Repository: github.com/sacrtap/customer_sys_context*

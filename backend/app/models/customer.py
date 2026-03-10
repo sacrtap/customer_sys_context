@@ -146,6 +146,9 @@ class Customer(BaseModel):
     # 备注
     remark = Column(String(1000), nullable=True)
 
+    # 合同到期日期
+    contract_expiry_date = Column(Date, nullable=True, index=True)
+
     # 关联
     industry = relationship("Industry", back_populates="customers")
     level = relationship("CustomerLevel", back_populates="customers")

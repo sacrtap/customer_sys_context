@@ -669,15 +669,16 @@ async def quick_actions(request):
             .where(Settlement.status == SettlementStatus.UNSETTLED.value)
         )
 
-        # 即将到期客户数（这里简化为最近 30 天到期的客户）
-        # 实际业务中可能有合同到期字段
+        # 即将到期客户数（合同到期日期在最近 30 天内）
         thirty_days_later = date.today() + timedelta(days=30)
         expiring_customers = await session.scalar(
             select(func.count())
             .select_from(Customer)
             .where(
                 Customer.status == CustomerStatus.ACTIVE.value,
-                Customer.updated_at <= thirty_days_later,  # 示例逻辑
+                Customer.contract_expiry_date != None,
+                Customer.contract_expiry_date <= thirty_days_later,
+                Customer.contract_expiry_date >= date.today(),
             )
         )
 

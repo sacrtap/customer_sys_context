@@ -30,6 +30,7 @@ class CustomerBase(BaseModel):
     contact_email: EmailStr | None = None
     address: str | None = None
     remark: str | None = None
+    contract_expiry_date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
     _validate_phone = field_validator("contact_phone")(validate_phone)
 
@@ -59,6 +60,7 @@ class CustomerUpdate(BaseModel):
     settlement_status: SettlementStatus | None = None
     owner_id: str | None = None
     remark: str | None = None
+    contract_expiry_date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
 class IndustryResponse(BaseModel):

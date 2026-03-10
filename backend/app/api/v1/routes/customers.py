@@ -39,12 +39,24 @@ async def list_customers(request):
         # 状态筛选
         status = request.args.get("status")
         if status:
-            query = query.where(Customer.status == status)
+            # 尝试将输入转换为枚举值（支持 "ACTIVE" 或 "active" 输入）
+            try:
+                status_enum = CustomerStatus[status.upper()]
+                query = query.where(Customer.status == status_enum.value)
+            except KeyError:
+                return json({"error": f"无效的客户状态：{status}"}, status=400)
 
         # 结算状态筛选
         settlement_status = request.args.get("settlement_status")
         if settlement_status:
-            query = query.where(Customer.settlement_status == settlement_status)
+            # 尝试将输入转换为枚举值（支持 "UNSETTLED" 或 "unsettled" 输入）
+            try:
+                status_enum = SettlementStatus[settlement_status.upper()]
+                query = query.where(Customer.settlement_status == status_enum.value)
+            except KeyError:
+                return json(
+                    {"error": f"无效的结算状态：{settlement_status}"}, status=400
+                )
 
         # 行业筛选
         industry_id = request.args.get("industry_id")
@@ -60,6 +72,27 @@ async def list_customers(request):
         owner_id = request.args.get("owner_id")
         if owner_id:
             query = query.where(Customer.owner_id == owner_id)
+
+        # 合同到期日期筛选
+        expiry_status = request.args.get("expiry_status")
+        if expiry_status == "expiring":
+            # 即将到期（最近 30 天内）
+            from datetime import date, timedelta
+
+            thirty_days_later = date.today() + timedelta(days=30)
+            query = query.where(
+                Customer.contract_expiry_date != None,
+                Customer.contract_expiry_date <= thirty_days_later,
+                Customer.contract_expiry_date >= date.today(),
+            )
+        elif expiry_status == "expired":
+            # 已到期
+            from datetime import date
+
+            query = query.where(
+                Customer.contract_expiry_date != None,
+                Customer.contract_expiry_date < date.today(),
+            )
 
         # 分页
         page = int(request.args.get("page", 1))
