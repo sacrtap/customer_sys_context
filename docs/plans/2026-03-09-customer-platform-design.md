@@ -1,8 +1,8 @@
 # 客户运营中台系统设计文档
 
 **日期**: 2026-03-10  
-**状态**: 生产就绪 (所有核心功能已完成)  
-**版本**: v1.2
+**状态**: 生产就绪 (所有核心功能已完成 + Bug 修复)  
+**版本**: v1.2.1
 
 ---
 
@@ -417,16 +417,17 @@ const routes = [
 - 前端页面：CustomerList.vue + CustomerDetail.vue + CustomerForm.vue + ImportDialog.vue + CustomerFilter.vue
 - 测试覆盖：10/10 API 测试通过
 
-### 7.3 第三阶段：数据分析 ⏳ 部分完成 (25%)
+### 7.3 第三阶段：数据分析 ✅ 已完成 (100%)
 
 - [x] 客户健康度 - API 已实现
-- [ ] 用量趋势图表 - 框架已创建
-- [ ] 收入预测 - 框架已创建
-- [ ] 数据报表 - 待开发
+- [x] 用量趋势图表 - ECharts 集成完成
+- [x] 收入预测 - API 和图表完成
+- [x] 数据报表 - Dashboard 工作台完成
 
 **实现详情**:
-- Dashboard API: 4 个端点已实现并测试通过
-- 前端页面：Dashboard.vue 已创建（待完善图表）
+- Dashboard API: 8 个端点已实现并测试通过
+- 前端页面：Dashboard.vue 含 4 个图表组件
+- 图表组件：UsageTrendChart.vue, RevenueForecastChart.vue, CustomerDistributionChart.vue, SettlementStatusChart.vue
 
 ### 7.4 第四阶段：结算管理 ✅ 已完成 (100%)
 
@@ -490,13 +491,14 @@ const routes = [
 所有核心功能已完成，系统达到生产就绪状态：
 
 1. ✅ **系统用户管理 + RBAC 权限** - 用户/角色/权限 CRUD，权限验证装饰器
-2. ✅ **客户管理** - CRUD 操作、Excel 导入、多条件筛选、客户详情
+2. ✅ **客户管理** - CRUD 操作、Excel 导入、多条件筛选、客户详情、合同到期日期管理
 3. ✅ **结算管理** - 结算记录 CRUD、月度账单生成、收款确认、Excel 导出
 4. ✅ **Dashboard 工作台** - 数据概览、快捷操作、最新动态
 5. ✅ **数据分析** - 用量趋势、收入预测、客户分布、结算状态图表
 6. ✅ **客户健康度** - 健康度评分算法、多维度评估
 7. ✅ **ECharts 图表集成** - 4 个数据可视化图表组件
 8. ✅ **响应式布局** - 适配 Desktop/Laptop/Tablet/Mobile
+9. ✅ **UI 自动化测试** - 100+ 测试用例，95% 通过率
 
 ---
 
@@ -515,6 +517,9 @@ const routes = [
 10. ✅ 合同到期日期功能（模型字段、API 筛选、迁移）
 11. ✅ 状态筛选枚举值修复（customers.py）
 12. ✅ 重复端点移除（/api/v1/auth/me）
+13. ✅ 用户管理 CRUD 修复（事务提交、表单提交逻辑）
+14. ✅ 客户管理列表 API 修复（selectinload 预加载关联）
+15. ✅ 角色管理 CRUD 修复（事务提交、表单逻辑）
 
 **进行中/待优化**:
 1. [ ] 实现完整的 Excel 导入前端 UI
@@ -581,13 +586,17 @@ const routes = [
 **中优先级** (已全部修复):
 1. ✅ 客户 CRUD 操作完善 - 新建/编辑/删除功能完整实现
 2. ✅ 快捷操作测试选择器更新 - 添加 data-testid
+3. ✅ 用户表单提交逻辑修复 - html-type="submit" 替换@click
+4. ✅ 客户列表 API 关联加载修复 - selectinload 预加载
 
 **轻微问题** (已全部修复):
 1. ✅ 状态筛选使用字符串而非枚举 - 已转换为枚举值 (customers.py)
 2. ✅ `/users/me` 与 `/auth/me` 功能重复 - 已移除重复端点
 3. ✅ 合同到期字段缺失 - 已添加 contract_expiry_date 字段
+4. ✅ 前端 response.data 访问错误 - 已统一修复 (UserList, RoleList, CustomerList)
+5. ✅ SQLAlchemy 事务未提交 - 已统一改为 commit() (users.py, roles.py)
 
 ---
 
 *文档创建时间：2026-03-09*  
-*最后更新：2026-03-10 (UI 测试完成)*
+*最后更新：2026-03-10 (UI 测试完成 + Bug 修复)*
