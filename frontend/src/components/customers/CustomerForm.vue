@@ -31,12 +31,12 @@
           name="industry_id"
           data-testid="industry"
         >
-          <a-select v-model:value="formData.industry_id" placeholder="请选择行业">
-            <a-select-option value="1">房地产</a-select-option>
-            <a-select-option value="2">金融</a-select-option>
-            <a-select-option value="3">互联网</a-select-option>
-            <a-select-option value="4">制造业</a-select-option>
-          </a-select>
+          <a-select
+            v-model:value="formData.industry_id"
+            placeholder="请选择行业"
+            :loading="loadingIndustries"
+            :options="industries.map(i => ({ label: i.name, value: i.id }))"
+          />
         </a-form-item>
       </a-col>
       <a-col :span="12">
@@ -45,12 +45,12 @@
           name="level_id"
           data-testid="customer-level"
         >
-          <a-select v-model:value="formData.level_id" placeholder="请选择客户等级">
-            <a-select-option value="1">A级</a-select-option>
-            <a-select-option value="2">B级</a-select-option>
-            <a-select-option value="3">C级</a-select-option>
-            <a-select-option value="4">D级</a-select-option>
-          </a-select>
+          <a-select
+            v-model:value="formData.level_id"
+            placeholder="请选择客户等级"
+            :loading="loadingLevels"
+            :options="levels.map(l => ({ label: l.name, value: l.id }))"
+          />
         </a-form-item>
       </a-col>
       <a-col :span="12">
@@ -112,8 +112,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import type { FormInstance } from 'ant-design-vue'
+import { request } from '@/api/request'
 
 interface Customer {
   id?: string
@@ -128,6 +129,22 @@ interface Customer {
   remark?: string
   industry?: { id: string; name: string }
   level?: { id: string; name: string }
+}
+
+interface Industry {
+  id: string
+  name: string
+  code: string
+  parent_id: string | null
+  level: number
+}
+
+interface CustomerLevel {
+  id: string
+  code: string
+  name: string
+  priority: number
+  description: string | null
 }
 
 const props = defineProps<{
@@ -154,6 +171,11 @@ const formData = reactive<Customer>({
   remark: ''
 })
 
+const industries = ref<Industry[]>([])
+const levels = ref<CustomerLevel[]>([])
+const loadingIndustries = ref(false)
+const loadingLevels = ref(false)
+
 const rules = {
   customer_code: [
     { required: true, message: '请输入客户编码', trigger: 'blur' }
@@ -167,6 +189,30 @@ const rules = {
   email: [
     { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
   ]
+}
+
+const fetchIndustries = async () => {
+  loadingIndustries.value = true
+  try {
+    const response = await request.get('/customers/industries')
+    industries.value = response.items || []
+  } catch (error) {
+    console.error('获取行业列表失败:', error)
+  } finally {
+    loadingIndustries.value = false
+  }
+}
+
+const fetchLevels = async () => {
+  loadingLevels.value = true
+  try {
+    const response = await request.get('/customers/levels')
+    levels.value = response.items || []
+  } catch (error) {
+    console.error('获取客户等级列表失败:', error)
+  } finally {
+    loadingLevels.value = false
+  }
 }
 
 watch(() => props.customer, (customer) => {
@@ -189,6 +235,11 @@ const handleCancel = () => {
   }
   emit('cancel')
 }
+
+onMounted(() => {
+  fetchIndustries()
+  fetchLevels()
+})
 </script>
 
 <style scoped>
