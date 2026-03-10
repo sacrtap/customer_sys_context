@@ -1,0 +1,700 @@
+{
+  "config": {
+    "configFile": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/playwright.config.ts",
+    "rootDir": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "customer-management.spec.ts",
+      "file": "customer-management.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "客户管理 UI 测试",
+          "file": "customer-management.spec.ts",
+          "line": 37,
+          "column": 6,
+          "specs": [
+            {
+              "title": "客户列表 - 应该显示客户列表页面",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 61053,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:38:8",
+                        "location": {
+                          "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                          "column": 8,
+                          "line": 38
+                        },
+                        "snippet": "  36 |\n  37 | test.describe('客户管理 UI 测试', () => {\n> 38 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  39 |     await login(page);\n  40 |   });\n  41 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                            "column": 8,
+                            "line": 38
+                          },
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  36 |\n  37 | test.describe('客户管理 UI 测试', () => {\n> 38 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  39 |     await login(page);\n  40 |   });\n  41 |\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:38:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                            "column": 50,
+                            "line": 30
+                          },
+                          "message": "Error: locator.click: Test timeout of 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '登录' })\u001b[22m\n\n\n  28 |   \n  29 |   // 点击登录按钮\n> 30 |   await page.getByRole('button', { name: '登录' }).click();\n     |                                                  ^\n  31 |   \n  32 |   // 等待登录成功并跳转\n  33 |   await page.waitForURL(/\\/dashboard|\\/customers/, { timeout: 10000 });\n    at login (/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:30:50)\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:39:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:46:52.561Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/test-results/customer-management-客户管理-UI-测试-客户列表---应该显示客户列表页面-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/test-results/customer-management-客户管理-UI-测试-客户列表---应该显示客户列表页面-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                        "column": 8,
+                        "line": 38
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-599e23074282b1e150ad",
+              "file": "customer-management.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "客户列表 - 应该支持搜索功能",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 61054,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:38:8",
+                        "location": {
+                          "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                          "column": 8,
+                          "line": 38
+                        },
+                        "snippet": "  36 |\n  37 | test.describe('客户管理 UI 测试', () => {\n> 38 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  39 |     await login(page);\n  40 |   });\n  41 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                            "column": 8,
+                            "line": 38
+                          },
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  36 |\n  37 | test.describe('客户管理 UI 测试', () => {\n> 38 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  39 |     await login(page);\n  40 |   });\n  41 |\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:38:8"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                            "column": 50,
+                            "line": 30
+                          },
+                          "message": "Error: locator.click: Test timeout of 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '登录' })\u001b[22m\n\n\n  28 |   \n  29 |   // 点击登录按钮\n> 30 |   await page.getByRole('button', { name: '登录' }).click();\n     |                                                  ^\n  31 |   \n  32 |   // 等待登录成功并跳转\n  33 |   await page.waitForURL(/\\/dashboard|\\/customers/, { timeout: 10000 });\n    at login (/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:30:50)\n    at /Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts:39:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:48:00.284Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/test-results/customer-management-客户管理-UI-测试-客户列表---应该支持搜索功能-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/test-results/customer-management-客户管理-UI-测试-客户列表---应该支持搜索功能-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/sacrtap/Documents/trae_projects/customer_sys_context/frontend/tests/e2e/customer-management.spec.ts",
+                        "column": 8,
+                        "line": 38
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-c393f0ef098660f9cd25",
+              "file": "customer-management.spec.ts",
+              "line": 62,
+              "column": 3
+            },
+            {
+              "title": "客户列表 - 应该支持重置功能",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.610Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-98c24ea479dd6334b364",
+              "file": "customer-management.spec.ts",
+              "line": 82,
+              "column": 3
+            },
+            {
+              "title": "客户列表 - 应该显示分页控件",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.612Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-4d0901069fe1ae08cff2",
+              "file": "customer-management.spec.ts",
+              "line": 100,
+              "column": 3
+            },
+            {
+              "title": "客户列表 - 应该显示导入客户按钮",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.613Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-89f75cad590825a4f7b8",
+              "file": "customer-management.spec.ts",
+              "line": 112,
+              "column": 3
+            },
+            {
+              "title": "客户列表 - 应该显示新建客户按钮",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.614Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-b808b988cf601c9bc2dc",
+              "file": "customer-management.spec.ts",
+              "line": 133,
+              "column": 3
+            },
+            {
+              "title": "客户详情 - 应该显示客户详情页面结构",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-c0bfd6dd47564e310505",
+              "file": "customer-management.spec.ts",
+              "line": 151,
+              "column": 3
+            },
+            {
+              "title": "客户详情 - 详情页应该显示基本信息",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-b2d0d05be33b9ff36601",
+              "file": "customer-management.spec.ts",
+              "line": 177,
+              "column": 3
+            },
+            {
+              "title": "客户详情 - 详情页应该支持返回列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-ac70e404d46d1bf7c9e6",
+              "file": "customer-management.spec.ts",
+              "line": 199,
+              "column": 3
+            },
+            {
+              "title": "导入功能 - 应该显示导入对话框",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-d683ba3dc054c308deac",
+              "file": "customer-management.spec.ts",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "导入功能 - 应该显示文件拖拽上传区域",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.617Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-b27234cf592bda114be7",
+              "file": "customer-management.spec.ts",
+              "line": 237,
+              "column": 3
+            },
+            {
+              "title": "响应式 - 应该在移动端正常显示",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.618Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-02460f5d34bddf103b71",
+              "file": "customer-management.spec.ts",
+              "line": 250,
+              "column": 3
+            },
+            {
+              "title": "响应式 - 应该在平板端正常显示",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "failed",
+                      "duration": 0,
+                      "error": {
+                        "message": "Test not found in the worker process. Make sure test title does not change."
+                      },
+                      "errors": [
+                        {
+                          "message": "Test not found in the worker process. Make sure test title does not change."
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-10T01:49:07.618Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6942f5d8f9df79ddcff8-9e36001da1d60541276b",
+              "file": "customer-management.spec.ts",
+              "line": 264,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-03-10T01:46:48.745Z",
+    "duration": 138935.424,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 13,
+    "flaky": 0
+  }
+}
