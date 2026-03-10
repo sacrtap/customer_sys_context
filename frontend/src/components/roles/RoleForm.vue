@@ -11,34 +11,47 @@
         <a-form-item
           label="角色名称"
           name="name"
-          data-testid="role-name"
         >
-          <a-input id="role-name-input" v-model:value="formData.name" placeholder="请输入角色名称" />
+          <a-input 
+            id="role-name-input" 
+            v-model:value="formData.name" 
+            placeholder="请输入角色名称" 
+            data-testid="role-name-input"
+          />
         </a-form-item>
       </a-col>
       <a-col :span="12">
         <a-form-item
           label="是否默认"
           name="is_default"
-          data-testid="is-default"
         >
-          <a-switch id="is-default-switch" v-model:checked="formData.is_default" checked-children="是" un-checked-children="否" />
+          <a-switch 
+            id="is-default-switch" 
+            v-model:checked="formData.is_default" 
+            checked-children="是" 
+            un-checked-children="否" 
+            data-testid="is-default-switch"
+          />
         </a-form-item>
       </a-col>
       <a-col :span="24">
         <a-form-item
           label="描述"
           name="description"
-          data-testid="description"
         >
-          <a-textarea id="description-textarea" v-model:value="formData.description" placeholder="请输入角色描述" :rows="3" />
+          <a-textarea 
+            id="description-textarea" 
+            v-model:value="formData.description" 
+            placeholder="请输入角色描述" 
+            :rows="3" 
+            data-testid="description-textarea"
+          />
         </a-form-item>
       </a-col>
       <a-col :span="24">
         <a-form-item
           label="权限配置"
           name="permission_ids"
-          data-testid="permissions"
         >
           <a-tree
             id="permission-tree"
@@ -48,6 +61,7 @@
             :default-expand-all="true"
             :field-names="{ title: 'name', key: 'id', children: 'children' }"
             @check="handlePermissionCheck"
+            data-testid="permission-tree"
           />
         </a-form-item>
       </a-col>
@@ -150,10 +164,29 @@ const rules = {
 }
 
 watch(() => props.role, (role) => {
-  if (role && props.mode === 'edit') {
+  if (props.mode === 'edit') {
+    if (role) {
+      // 编辑模式且有角色数据
+      Object.assign(formData, {
+        ...role,
+        permission_ids: role.permissions?.map(p => p.id) || []
+      })
+    } else {
+      // 编辑模式但角色数据为空，重置表单
+      Object.assign(formData, {
+        name: '',
+        description: '',
+        is_default: false,
+        permission_ids: []
+      })
+    }
+  } else {
+    // 新建模式，重置表单
     Object.assign(formData, {
-      ...role,
-      permission_ids: role.permissions?.map(p => p.id) || []
+      name: '',
+      description: '',
+      is_default: false,
+      permission_ids: []
     })
   }
 }, { immediate: true })
@@ -162,8 +195,13 @@ const handlePermissionCheck = (checkedKeys: string[]) => {
   formData.permission_ids = checkedKeys.filter(key => !key.startsWith('type_'))
 }
 
-const handleSubmit = () => {
-  emit('submit', { ...formData })
+const handleSubmit = async () => {
+  try {
+    await formRef.value?.validate()
+    emit('submit', { ...formData })
+  } catch (error) {
+    console.error('表单验证失败:', error)
+  }
 }
 
 const handleCancel = () => {

@@ -4,14 +4,15 @@
       <div class="table-header">
         <div class="header-left">
           <a-space>
-            <a-input-search
-              v-model:value="searchValue"
-              placeholder="搜索用户名/姓名/邮箱"
-              style="width: 300px"
-              allow-clear
-              @search="handleSearch"
-            />
-            <a-button @click="handleReset">重置</a-button>
+          <a-input-search
+            v-model:value="searchValue"
+            placeholder="搜索用户名/姓名/邮箱"
+            style="width: 300px"
+            allow-clear
+            data-testid="search-input"
+            @search="handleSearch"
+          />
+          <a-button @click="handleReset" data-testid="reset-button">重置</a-button>
           </a-space>
         </div>
         <div class="header-right">
@@ -72,12 +73,15 @@
       destroyOnClose
     >
       <UserForm
-        :user-id="editingUserId"
+        v-if="formVisible"
+        :mode="editingUserId ? 'edit' : 'create'"
+        :user="getEditingUser()"
+        :role-list="roles"
         :loading="formLoading"
         @submit="handleFormSubmit"
         @cancel="formVisible = false"
       />
-     </a-modal>
+    </a-modal>
 
      <!-- 删除确认弹窗 -->
      <a-modal
@@ -128,6 +132,7 @@ const formLoading = ref(false)
 const editingUserId = ref<string | null>(null)
 const deleteVisible = ref(false)
 const deletingUser = ref<User | null>(null)
+const roles = ref<Array<{ id: string; name: string }>>([])
 
 const pagination = reactive({
   current: 1,
@@ -237,6 +242,20 @@ const handleEdit = (record: User) => {
   formVisible.value = true
 }
 
+const getEditingUser = () => {
+  if (!editingUserId.value) return undefined
+  return users.value.find(u => u.id === editingUserId.value)
+}
+
+const fetchRoles = async () => {
+  try {
+    const response = await request.get('/roles')
+    roles.value = response.items || []
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+  }
+}
+
 const showDeleteConfirm = (record: User) => {
   deletingUser.value = record
   deleteVisible.value = true
@@ -276,6 +295,7 @@ const handleFormSubmit = async (data: UserFormData) => {
 
 onMounted(() => {
   fetchUsers()
+  fetchRoles()
 })
 </script>
 

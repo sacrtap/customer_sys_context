@@ -64,7 +64,7 @@
       destroyOnClose
     >
       <RoleForm
-        v-if="formVisible && permissions.length > 0"
+        v-if="formVisible"
         :mode="editingRoleId ? 'edit' : 'create'"
         :role="getEditingRole()"
         :permission-list="permissions"
@@ -82,12 +82,12 @@
       destroyOnClose
     >
       <RoleForm
-        v-if="permissionVisible && permissions.length > 0"
+        v-if="permissionVisible"
         :mode="'edit'"
         :role="getEditingRole()"
         :permission-list="permissions"
         :loading="formLoading"
-        @submit-permissions="handlePermissionSubmit"
+        @submit="handlePermissionFormSubmit"
         @cancel="permissionVisible = false"
       />
     </a-modal>
@@ -192,7 +192,7 @@ const fetchRoles = async () => {
   loading.value = true
   try {
     const response = await request.get('/roles')
-    roles.value = response.data.items || []
+    roles.value = response.items || []
   } catch (error) {
     console.error('获取角色列表失败:', error)
   } finally {
@@ -255,15 +255,18 @@ const handleDelete = async () => {
 const handleFormSubmit = async (data: RoleFormData) => {
   formLoading.value = true
   try {
+    console.log('提交角色数据:', JSON.stringify(data, null, 2))
     if (editingRoleId.value) {
       await request.put(`/roles/${editingRoleId.value}`, data)
       message.success('更新成功')
     } else {
-      await request.post('/roles', data)
+      const response = await request.post('/roles', data)
+      console.log('创建角色响应:', JSON.stringify(response, null, 2))
       message.success('创建成功')
     }
     formVisible.value = false
-    fetchRoles()
+    await fetchRoles()
+    console.log('刷新后角色列表:', JSON.stringify(roles.value.map(r => ({ id: r.id, name: r.name })), null, 2))
   } catch (error) {
     message.error(editingRoleId.value ? '更新失败' : '创建失败')
     console.error('表单提交失败:', error)
@@ -272,10 +275,10 @@ const handleFormSubmit = async (data: RoleFormData) => {
   }
 }
 
-const handlePermissionSubmit = async (permissionIds: string[]) => {
+const handlePermissionFormSubmit = async (data: RoleFormData) => {
   formLoading.value = true
   try {
-    await request.post(`/roles/${editingRoleId.value}/permissions`, { permission_ids: permissionIds })
+    await request.post(`/roles/${editingRoleId.value}/permissions`, { permission_ids: data.permission_ids })
     message.success('权限更新成功')
     permissionVisible.value = false
     fetchRoles()

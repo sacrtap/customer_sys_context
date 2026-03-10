@@ -183,15 +183,15 @@ async def create_settlement(request):
         )
 
         session.add(settlement)
-        await session.flush()
+        await session.commit()
 
-    return json(
-        {
-            "id": str(settlement.id),
-            "message": "结算记录创建成功",
-        },
-        status=201,
-    )
+        return json(
+            {
+                "id": str(settlement.id),
+                "message": "结算记录创建成功",
+            },
+            status=201,
+        )
 
 
 @bp.put("/<settlement_id>")
@@ -236,9 +236,9 @@ async def update_settlement(request, settlement_id):
                 else:
                     setattr(settlement, field, value)
 
-        await session.flush()
+        await session.commit()
 
-    return json({"message": "结算记录更新成功"})
+        return json({"message": "结算记录更新成功"})
 
 
 @bp.delete("/<settlement_id>")
@@ -262,9 +262,9 @@ async def delete_settlement(request, settlement_id):
             return json({"error": "结算记录不存在"}, status=404)
 
         await session.delete(settlement)
-        await session.flush()
+        await session.commit()
 
-    return json({"message": "结算记录删除成功"})
+        return json({"message": "结算记录删除成功"})
 
 
 @bp.post("/<settlement_id>/confirm-payment")
@@ -305,9 +305,9 @@ async def confirm_payment(request, settlement_id):
             f" - {settlement.remark}" if settlement.remark else ""
         )
 
-        await session.flush()
+        await session.commit()
 
-    return json({"message": "支付确认成功"})
+        return json({"message": "支付确认成功"})
 
 
 @bp.post("/generate-monthly")

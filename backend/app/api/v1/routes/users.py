@@ -108,7 +108,7 @@ async def create_user(request):
             user.roles = list(roles.scalars().all())
 
         session.add(user)
-        await session.flush()
+        await session.commit()
 
         return json(
             {
@@ -187,19 +187,11 @@ async def update_user(request, user_id):
             user.phone = data.phone
         if data.is_active is not None:
             user.is_active = data.is_active
-        if data.password:
-            user.password_hash = User.hash_password(data.password)
 
-        # 更新角色
-        if data.role_ids is not None:
-            roles = await session.execute(
-                select(Role).where(Role.id.in_(data.role_ids))
-            )
-            user.roles = list(roles.scalars().all())
+        session.add(user)
+        await session.commit()
 
-        await session.flush()
-
-    return json({"message": "用户更新成功"})
+        return json({"message": "用户更新成功"})
 
 
 @bp.delete("/<user_id>")
@@ -219,16 +211,16 @@ async def delete_user(request, user_id):
         if not user:
             return json({"error": "用户不存在"}, status=404)
 
-        # 不能删除自己
+        # 检查是否是自己的账户
         current_user = await get_current_user(request)
-        if current_user.id == user.id:
+        if current_user and user.id == current_user.id:
             return json(
                 {"error": "不能删除自己的账户"},
                 status=400,
             )
 
         await session.delete(user)
-        await session.flush()
+        await session.commit()
 
     return json({"message": "用户删除成功"})
 
@@ -305,6 +297,6 @@ async def update_user_password(request, user_id):
 
         # 更新密码
         user.password_hash = User.hash_password(data.new_password)
-        await session.flush()
+        await session.commit()
 
     return json({"message": "密码修改成功"})

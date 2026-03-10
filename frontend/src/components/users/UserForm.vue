@@ -11,76 +11,69 @@
         <a-form-item
           label="用户名"
           name="username"
-          data-testid="username"
         >
-          <a-input v-model:value="formData.username" placeholder="请输入用户名" />
+          <a-input v-model:value="formData.username" placeholder="请输入用户名" data-testid="username" />
         </a-form-item>
       </a-col>
       <a-col :span="12">
         <a-form-item
           label="姓名"
           name="full_name"
-          data-testid="full-name"
         >
-          <a-input v-model:value="formData.full_name" placeholder="请输入姓名" />
+          <a-input v-model:value="formData.full_name" placeholder="请输入姓名" data-testid="full-name" />
         </a-form-item>
       </a-col>
       <a-col :span="12">
         <a-form-item
           label="邮箱"
           name="email"
-          data-testid="email"
         >
-          <a-input v-model:value="formData.email" placeholder="请输入邮箱" />
+          <a-input v-model:value="formData.email" placeholder="请输入邮箱" data-testid="email" />
         </a-form-item>
       </a-col>
       <a-col :span="12">
         <a-form-item
           label="电话"
           name="phone"
-          data-testid="phone"
         >
-          <a-input v-model:value="formData.phone" placeholder="请输入电话号码" />
+          <a-input v-model:value="formData.phone" placeholder="请输入电话号码" data-testid="phone" />
         </a-form-item>
       </a-col>
       <a-col :span="12" v-if="mode === 'create'">
         <a-form-item
           label="密码"
           name="password"
-          data-testid="password"
         >
-          <a-input-password v-model:value="formData.password" placeholder="请输入密码" />
+          <a-input-password v-model:value="formData.password" placeholder="请输入密码" data-testid="password" />
         </a-form-item>
       </a-col>
       <a-col :span="12" v-if="mode === 'create'">
         <a-form-item
           label="确认密码"
           name="confirm_password"
-          data-testid="confirm-password"
         >
-          <a-input-password v-model:value="formData.confirm_password" placeholder="请再次输入密码" />
+          <a-input-password v-model:value="formData.confirm_password" placeholder="请再次输入密码" data-testid="confirm-password" />
         </a-form-item>
       </a-col>
       <a-col :span="12">
         <a-form-item
           label="状态"
           name="is_active"
-          data-testid="is-active"
         >
-          <a-switch v-model:checked="formData.is_active" checked-children="正常" un-checked-children="禁用" />
+          <a-switch v-model:checked="formData.is_active" checked-children="正常" un-checked-children="禁用" data-testid="is-active" />
         </a-form-item>
       </a-col>
       <a-col :span="24">
         <a-form-item
           label="角色"
           name="role_ids"
-          data-testid="roles"
         >
           <a-select
             v-model:value="formData.role_ids"
             mode="multiple"
             placeholder="请选择角色"
             style="width: 100%"
+            data-testid="roles"
           >
             <a-select-option
               v-for="role in roleList"
@@ -194,15 +187,21 @@ watch(() => props.user, (user) => {
   }
 }, { immediate: true })
 
-const handleSubmit = () => {
-  const { confirm_password, ...submitData } = formData
-  emit('submit', submitData)
+const handleSubmit = async () => {
+  console.log('[UserForm] handleSubmit called')
+  try {
+    console.log('[UserForm] Starting validation...')
+    await formRef.value?.validate()
+    console.log('[UserForm] Validation passed')
+    const { confirm_password, ...submitData } = formData
+    console.log('[UserForm] Emitting submit with:', submitData)
+    emit('submit', submitData)
+  } catch (error) {
+    console.error('[UserForm] 表单验证失败:', error)
+  }
 }
 
 const handleCancel = () => {
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
   emit('cancel')
 }
 </script>

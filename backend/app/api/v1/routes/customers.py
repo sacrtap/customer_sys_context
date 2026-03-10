@@ -210,16 +210,16 @@ async def create_customer(request):
         )
 
         session.add(customer)
-        await session.flush()
+        await session.commit()
 
-    return json(
-        {
-            "id": str(customer.id),
-            "customer_code": customer.customer_code,
-            "message": "客户创建成功",
-        },
-        status=201,
-    )
+        return json(
+            {
+                "id": str(customer.id),
+                "customer_code": customer.customer_code,
+                "message": "客户创建成功",
+            },
+            status=201,
+        )
 
 
 @bp.get("/<customer_id>")
@@ -347,9 +347,9 @@ async def update_customer(request, customer_id):
             if value is not None:
                 setattr(customer, field, value)
 
-        await session.flush()
+        await session.commit()
 
-    return json({"message": "客户更新成功"})
+        return json({"message": "客户更新成功"})
 
 
 @bp.delete("/<customer_id>")
@@ -372,9 +372,9 @@ async def delete_customer(request, customer_id):
             return json({"error": "客户不存在"}, status=404)
 
         await session.delete(customer)
-        await session.flush()
+        await session.commit()
 
-    return json({"message": "客户删除成功"})
+        return json({"message": "客户删除成功"})
 
 
 @bp.get("/industries")
@@ -516,7 +516,7 @@ async def import_customers(request):
                 session.add(customer)
                 created_count += 1
 
-            await session.flush()
+            await session.commit()
 
         return json(
             {

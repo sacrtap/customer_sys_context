@@ -73,7 +73,7 @@ async def create_role(request):
             role.permissions = list(permissions.scalars().all())
 
         session.add(role)
-        await session.flush()
+        await session.commit()
 
     return json(
         {
@@ -124,7 +124,7 @@ async def update_role(request, role_id):
             )
             role.permissions = list(permissions.scalars().all())
 
-        await session.flush()
+        await session.commit()
 
     return json({"message": "角色更新成功"})
 
@@ -154,7 +154,7 @@ async def delete_role(request, role_id):
             )
 
         await session.delete(role)
-        await session.flush()
+        await session.commit()
 
     return json({"message": "角色删除成功"})
 
@@ -254,7 +254,7 @@ async def update_role_permissions(request, role_id):
             # 清空权限
             role.permissions = []
 
-        await session.flush()
+        await session.commit()
 
     return json(
         {

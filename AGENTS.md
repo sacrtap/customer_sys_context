@@ -3367,5 +3367,367 @@ alembic current
 
 ---
 
-*Last updated: 2026-03-10 (合同到期日期功能实现)*  
+*Last updated: 2026-03-10 (角色创建后列表不显示修复)*  
 *Repository: github.com/sacrtap/customer_sys_context*
+
+---
+
+## 角色创建后列表不显示修复 (2026-03-10)
+
+### 问题描述
+创建角色成功后，列表中不显示新创建的角色。
+
+### 根因调查
+
+**1. 后端 API 返回格式** (`backend/app/api/v1/routes/roles.py:23-41`):
+```python
+return json({
+    "items": [...],  # 角色列表数组
+    "total": len(roles)
+})
+```
+
+**2. request 封装返回** (`frontend/src/api/request.ts:58`):
+```typescript
+// 响应拦截器
+(response: AxiosResponse) => {
+  return response.data as any  // 返回的是 response body
+}
+```
+
+**3. RoleList.vue 访问错误** (`frontend/src/views/roles/RoleList.vue:193`):
+```typescript
+// ❌ 错误：多了一层 .data
+const response = await request.get('/roles')
+roles.value = response.data.items || []
+
+// 实际访问路径:
+// response → { items: [...], total: N }
+// response.data → undefined
+// response.data.items → undefined
+```
+
+### 解决方案
+
+**修复前**:
+```typescript
+const fetchRoles = async () => {
+  loading.value = true
+  try {
+    const response = await request.get('/roles')
+    roles.value = response.data.items || []  // ❌ 错误
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+```
+
+**修复后**:
+```typescript
+const fetchRoles = async () => {
+  loading.value = true
+  try {
+    const response = await request.get('/roles')
+    roles.value = response.items || []  // ✅ 正确
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+```
+
+### 最佳实践
+
+**API 响应格式统一**:
+1. 后端统一返回格式：`{ data: {...}, message: "success" }`
+2. 或后端直接返回业务数据：`{ items: [...], total: N }`
+3. 前端 request 封装明确返回的是 response body 还是 response 对象
+4. 全项目统一访问方式，避免混用
+
+**调试技巧**:
+```typescript
+// 当遇到数据不显示时，打印完整响应
+const response = await request.get('/roles')
+console.log('Full response:', response)
+console.log('response.items:', response.items)
+console.log('response.data:', response.data)
+```
+
+### 验证方法
+
+**1. 浏览器控制台验证**:
+```javascript
+// 在页面中执行
+fetch('/api/v1/roles', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+}).then(r => r.json()).then(data => {
+  console.log('后端返回:', data)
+  console.log('items:', data.items)
+})
+```
+
+**2. 使用 httpx 测试脚本**:
+```bash
+cd backend
+source venv/bin/activate
+python scripts/test_role_fix.py
+```
+
+### 相关文档
+- 修复文件：`frontend/src/views/roles/RoleList.vue:193`
+- 测试脚本：`backend/scripts/test_role_fix.py`
+- 调试经验：`docs/tests/role-list-fix-summary.md`
+
+---
+
+## 角色创建后列表不显示修复 - 事务提交问题 (2026-03-10)
+
+### 问题描述
+创建角色成功后，提示"创建成功"但列表中不显示新创建的角色。
+
+### 根因调查
+
+**1. 第一层问题** - 前端访问路径错误
+- 后端返回：`{ items: [...], total: N }`
+- 前端错误访问：`response.data.items` → `undefined`
+- 修复：改为 `response.items`
+
+**2. 第二层问题** - 数据库事务未提交
+- 即使修复访问路径，角色仍然不显示
+- 控制台日志显示 API 返回成功
+- 但数据库中没有新记录
+
+**根本原因**: `backend/app/api/v1/routes/roles.py:76` 使用了 `await session.flush()` 而不是 `await session.commit()`
+
+```python
+# ❌ 错误：只 flush 不提交，事务退出时回滚
+session.add(role)
+await session.flush()
+return json({"message": "创建成功", "id": str(role.id)})
+
+# ✅ 正确：显式提交事务
+session.add(role)
+await session.commit()
+return json({"message": "创建成功", "id": str(role.id)})
+```
+
+### flush() vs commit() 区别
+
+| 方法 | 作用 | 事务状态 |
+|------|------|---------|
+| `flush()` | 将更改写入数据库 | 事务未提交，可能回滚 |
+| `commit()` | 提交事务 | 更改永久保存 |
+
+在 `async with` 上下文管理器中：
+- 如果只调用 `flush()`，当块退出时会尝试提交
+- 但如果代码中有异常或提前返回，事务会被回滚
+- **最佳实践**: 在写操作后显式调用 `commit()`
+
+### 修复验证
+
+**测试脚本**: `frontend/e2e/create-role-required-fields.spec.ts`
+
+```typescript
+test('① 只填写必填项创建角色', async ({ page }) => {
+  // 1. 打开新建角色表单
+  // 2. 填写必填项（角色名称、选择权限）
+  // 3. 提交表单
+  // 4. 验证成功提示
+  // 5. ✅ 验证新角色在列表中显示
+})
+```
+
+**测试结果**: ✅ 通过 (15.0s)
+
+### 系统性问题排查
+
+使用 grep 检查所有路由文件：
+
+```bash
+grep -n "await session.flush()" backend/app/api/v1/routes/*.py
+```
+
+**发现**:
+- `roles.py` - 4 处（已修复 1 处）
+- `users.py` - 4 处
+- `customers.py` - 4 处
+- `settlements.py` - 4 处
+
+**建议**: 逐一检查并修复，或统一改为 `commit()`
+
+### 最佳实践
+
+**1. 数据库写操作规范**
+```python
+async def create_xxx(request, data):
+    async with request.app.ctx.db() as session:
+        # 验证逻辑...
+        
+        model = Model(**data.dict())
+        session.add(model)
+        await session.commit()  # ✅ 显式提交
+        
+        return json({"message": "创建成功", "id": str(model.id)})
+```
+
+**2. 批量操作**
+```python
+async def batch_create(request, items):
+    async with request.app.ctx.db() as session:
+        for item in items:
+            model = Model(**item.dict())
+            session.add(model)
+        
+        await session.commit()  # ✅ 统一提交
+        
+        return json({"created": len(items)})
+```
+
+**3. 异常处理**
+```python
+async def create_with_error_handling(request, data):
+    async with request.app.ctx.db() as session:
+        try:
+            model = Model(**data.dict())
+            session.add(model)
+            await session.commit()
+            return json({"id": str(model.id)})
+        except Exception as e:
+            await session.rollback()  # ✅ 显式回滚
+            return json({"error": str(e)}, status=500)
+```
+
+### 相关文档
+- 修复文件：`backend/app/api/v1/routes/roles.py:76`
+- 测试脚本：`frontend/e2e/create-role-required-fields.spec.ts`
+- 会话管理：`backend/app/database.py:45-71`
+
+---
+
+## 角色管理功能修复 - 增删改查异常 (2026-03-10)
+
+### 问题描述
+用户报告角色管理页面只有新建正常，编辑、删除、权限功能均不生效。
+
+### 修复清单
+
+**1. 后端事务未提交**
+- `roles.py` 中 3 处使用 `flush()` 而非 `commit()`:
+  - 第 128 行 `update_role`
+  - 第 158 行 `delete_role`
+  - 第 257 行 `update_role_permissions`
+- 修复：全部改为 `await session.commit()`
+
+**2. 前端选择器错误**
+- `data-testid` 在 form-item 而非 input 上
+- 删除对话框按钮选择器不匹配
+- 修复：移动 `data-testid` 到正确元素，删除按钮改为 `button:has-text("删 除")`
+
+**3. RoleForm 的 watch 逻辑增强**
+```typescript
+// 修复前：只处理 role 存在的情况
+watch(() => props.role, (role) => {
+  if (role && props.mode === 'edit') {
+    Object.assign(formData, {...})
+  }
+})
+
+// 修复后：处理空数据情况
+watch(() => props.role, (role) => {
+  if (props.mode === 'edit') {
+    if (role) {
+      Object.assign(formData, {...})
+    } else {
+      // 重置表单
+      Object.assign(formData, {name: '', ...})
+    }
+  } else {
+    // 新建模式，重置表单
+    Object.assign(formData, {name: '', ...})
+  }
+})
+```
+
+**4. 移除 v-if 中的 permissions 检查**
+```vue
+<!-- 修复前 -->
+<RoleForm v-if="formVisible && permissions.length > 0" />
+
+<!-- 修复后 -->
+<RoleForm v-if="formVisible" />
+```
+
+**5. 测试选择器修正**
+```typescript
+// 修复前：匹配所有行（包括测量行）
+const rows = page.locator('[data-testid="role-table"] tbody tr')
+
+// 修复后：只匹配数据行
+const rows = page.locator('[data-testid="role-table"] tbody tr.ant-table-row')
+```
+
+**6. 权限分配事件修复**
+```vue
+<!-- 修复前：不存在的事件 -->
+<RoleForm @submit-permissions="handlePermissionSubmit" />
+
+<!-- 修复后：正确的事件 -->
+<RoleForm @submit="handlePermissionFormSubmit" />
+```
+
+**7. RoleList.vue 语法错误修复**
+- 第 292-294 行有多余代码（之前编辑遗留）
+- 修复：删除重复代码块
+
+### 测试结果
+
+**6/6 测试用例全部通过**:
+1. ✅ 角色列表应该正常显示
+2. ✅ 新建角色应该成功
+3. ✅ 编辑角色应该成功
+4. ✅ 权限分配应该成功
+5. ✅ 删除角色应该成功
+6. ✅ 默认角色不应该显示删除按钮
+
+### 关键发现
+
+**1. Ant Design Vue 表格测量行**
+- 使用 `scroll` 属性时会渲染 `ant-table-measure-row`
+- 测试选择器必须使用 `.ant-table-row` 来定位真实数据行
+
+**2. RoleForm 组件事件**
+- 只有 `submit` 事件，没有 `submit-permissions` 事件
+- 权限分配和新建角色使用同一个表单组件
+
+**3. Vue 文件语法错误**
+- 语法错误会导致页面完全无法加载（500 错误）
+- 控制台显示 `Failed to load resource: the server responded with a status of 500`
+
+### 最佳实践
+
+**1. 数据库写操作**
+```python
+# 始终显式提交事务
+session.add(model)
+await session.commit()  # 不要只调用 flush()
+```
+
+**2. 测试选择器**
+```typescript
+// 使用 .ant-table-row 选择真实数据行
+const dataRows = page.locator('tbody tr.ant-table-row')
+
+// 避免匹配测量行
+const measureRows = page.locator('tbody tr.ant-table-measure-row')
+```
+
+**3. 组件事件命名**
+- 统一使用 `submit` 事件，通过 mode prop 区分不同模式
+- 避免创建多个相似事件（如 `submit-permissions`）
+
+### 相关文档
+- 修复文件：`backend/app/api/v1/routes/roles.py`, `frontend/src/views/roles/RoleList.vue`, `frontend/src/components/roles/RoleForm.vue`
+- 测试脚本：`frontend/e2e/role-complete-tests.spec.ts`
