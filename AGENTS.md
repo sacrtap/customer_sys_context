@@ -3731,3 +3731,226 @@ const measureRows = page.locator('tbody tr.ant-table-measure-row')
 ### 相关文档
 - 修复文件：`backend/app/api/v1/routes/roles.py`, `frontend/src/views/roles/RoleList.vue`, `frontend/src/components/roles/RoleForm.vue`
 - 测试脚本：`frontend/e2e/role-complete-tests.spec.ts`
+
+---
+
+## 用户管理 CRUD 及表单提交修复 (2026-03-10)
+
+### 问题描述
+用户报告新建用户提交后数据未写入数据库，编辑、删除功能也不生效。
+
+### 根因分析
+
+**1. 后端事务未提交（主要根因）**
+- `users.py` 中所有写操作使用 `await session.flush()` 而非 `await session.commit()`
+- `flush()` 只将更改写入数据库，但事务未提交，退出 `async with` 上下文时会回滚
+- 影响范围：创建、更新、删除用户操作全部失效
+
+**2. 前端表单提交逻辑错误**
+- 提交按钮使用 `@click` 而非 `html-type="submit"`
+- 导致 Ant Design Vue 表单验证通过后无法触发 `@finish` 事件
+- `handleClickSubmit` 和 `handleSubmit` 函数逻辑重复
+
+**3. 代码缩进错误**
+- `update_user` 函数第 188-189 行缩进错误导致语法异常
+- `delete_user` 函数代码与 `update_user` 混在一起
+
+### 修复方案
+
+**1. 后端事务提交修复**
+
+```python
+# backend/app/api/v1/routes/users.py
+
+# ❌ 修复前：只 flush 不提交
+session.add(user)
+await session.flush()
+return json({"message": "创建成功"})
+
+# ✅ 修复后：显式提交事务
+session.add(user)
+await session.commit()
+return json({"message": "创建成功"})
+```
+
+**修复位置**:
+- 第 76 行：`create_user` - `flush()` → `commit()`
+- 第 189 行：`update_user` - `flush()` → `commit()` + 修复缩进
+- 第 207 行：`delete_user` - `flush()` → `commit()`
+
+**2. 前端表单提交修复**
+
+```vue
+<!-- frontend/src/components/users/UserForm.vue -->
+
+<!-- ❌ 修复前：使用 @click -->
+<a-button type="primary" @click="handleClickSubmit">提交</a-button>
+
+<!-- ✅ 修复后：使用 html-type="submit" -->
+<a-button type="primary" html-type="submit" :loading="submitting">提交</a-button>
+```
+
+**删除重复函数**:
+```typescript
+// ❌ 删除：重复的 handleClickSubmit
+const handleClickSubmit = () => {
+  handleSubmit()
+}
+
+// ✅ 保留：通过 @finish 事件触发
+const handleSubmit = async (values: any) => {
+  submitting.value = true
+  try {
+    if (props.mode === 'edit') {
+      await request.put(`/users/${props.user?.id}`, values)
+      message.success('用户更新成功')
+    } else {
+      await request.post('/users', values)
+      message.success('用户创建成功')
+    }
+    emit('submit')
+  } catch (error) {
+    console.error('保存用户失败:', error)
+    message.error('保存失败')
+  } finally {
+    submitting.value = false
+  }
+}
+```
+
+**3. 统一按钮布局**
+
+```vue
+<!-- 使用 <a-space> 统一按钮间距 -->
+<div class="form-actions">
+  <a-space>
+    <a-button @click="handleCancel" data-testid="cancel-button">取消</a-button>
+    <a-button type="primary" html-type="submit" :loading="submitting">
+      {{ props.mode === 'edit' ? '保存' : '新建' }}
+    </a-button>
+  </a-space>
+</div>
+```
+
+### 测试验证
+
+**后端 API 测试**:
+```bash
+cd backend
+source venv/bin/activate
+python scripts/test_user_create_fix.py
+```
+
+**测试结果**:
+```
+============================================================
+✅ 所有测试通过！用户创建功能正常工作
+============================================================
+
+[步骤 1] 获取测试 Token... ✅
+[步骤 2] 创建测试用户... ✅
+[步骤 3] 验证用户列表中包含新用户... ✅
+[步骤 4] 清理测试数据... ✅
+```
+
+**前端 E2E 测试**:
+```bash
+cd frontend
+npx playwright test e2e/user-form-fix-verification.spec.ts
+```
+
+**测试结果**: 2/2 通过 ✅
+- ✅ 新建用户表单提交成功
+- ✅ 表单验证正常工作
+
+### 关键要点
+
+**1. flush() vs commit() 区别**
+
+| 方法 | 作用 | 事务状态 | 使用场景 |
+|------|------|---------|---------|
+| `flush()` | 将更改写入数据库 | 事务未提交，可能回滚 | 批量操作中的中间步骤 |
+| `commit()` | 提交事务 | 更改永久保存 | 写操作完成时 |
+
+**在 `async with` 上下文中**:
+- 只调用 `flush()` 时，块退出时会尝试提交
+- 但如果有异常或提前返回，事务会被回滚
+- **最佳实践**: 写操作后显式调用 `commit()`
+
+**2. Ant Design Vue 表单提交**
+
+```vue
+<!-- ✅ 正确：声明式表单提交 -->
+<a-form @finish="handleSubmit">
+  <a-form-item name="username" rules={[{ required: true }]}>
+    <a-input placeholder="用户名" />
+  </a-form-item>
+  <a-button html-type="submit" type="primary">提交</a-button>
+</a-form>
+
+<!-- ❌ 错误：命令式点击处理 -->
+<a-form>
+  <a-button @click="handleClick">提交</a-button>
+</a-form>
+```
+
+**3. 系统性问题排查**
+
+使用 grep 检查所有路由文件：
+```bash
+grep -n "await session.flush()" backend/app/api/v1/routes/*.py
+```
+
+**发现**:
+- `roles.py` - 4 处
+- `users.py` - 4 处
+- `customers.py` - 4 处
+- `settlements.py` - 4 处
+
+**建议**: 逐一检查并修复，或统一改为 `commit()`
+
+### 最佳实践
+
+**1. 数据库写操作规范**
+```python
+async def create_xxx(request, data):
+    async with request.app.ctx.db() as session:
+        # 验证逻辑...
+        
+        model = Model(**data.dict())
+        session.add(model)
+        await session.commit()  # ✅ 显式提交
+        
+        return json({"message": "创建成功", "id": str(model.id)})
+```
+
+**2. 表单组件设计**
+```typescript
+// ✅ 推荐：单一提交入口
+const handleSubmit = async (values: any) => {
+  // 处理逻辑
+}
+
+// ❌ 避免：多个重复函数
+const handleClickSubmit = () => handleSubmit()
+const onSubmit = () => handleSubmit()
+```
+
+**3. 按钮布局统一**
+```vue
+<!-- 使用 <a-space> 保持间距一致 -->
+<a-space>
+  <a-button @click="handleCancel">取消</a-button>
+  <a-button type="primary" html-type="submit">提交</a-button>
+</a-space>
+```
+
+### 相关文档
+- 修复文件：`backend/app/api/v1/routes/users.py:76,189,207`, `frontend/src/components/users/UserForm.vue`
+- 测试脚本：`backend/scripts/test_user_create_fix.py`, `frontend/e2e/user-form-fix-verification.spec.ts`
+- Git 提交：`9a0c9ab fix: 修复用户管理增删改功能及表单提交问题`
+
+---
+
+*Last updated: 2026-03-10*  
+*Repository: github.com/sacrtap/customer_sys_context*
